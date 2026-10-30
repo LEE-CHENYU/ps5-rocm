@@ -1,7 +1,8 @@
 # ROCm on the PlayStation 5 GPU (gfx1013)
 
 Native ROCm/HIP compute on a PS5 running Linux: no `HSA_OVERRIDE_GFX_VERSION`, real gfx1013 code
-objects, rocBLAS built for the chip, and results checked bit-for-bit against the CPU.
+objects, rocBLAS built for the chip, and results checked against the CPU (vector add exact, matrix
+multiply within 2.15e-6).
 
 The PS5's GPU (Oberon, PCI `1002:13FC`) is driven by Linux as `CHIP_CYAN_SKILLFISH`, the same
 enum as the AMD BC-250 mining board, and reports `gfx_target_version 100103`: **gfx1013**, an

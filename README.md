@@ -23,7 +23,7 @@ to PS5 Linux on **Ubuntu 26.04** and documents what it took.
 | rocBLAS 7.1.0 built for gfx1013 | ✅ 56 gfx1013 kernel files, ~14 min on the console | [scripts/phase3.sh](scripts/phase3.sh), [logs/phase3-build-summary.log](logs/phase3-build-summary.log) |
 | First GPU launches | ✅ vector add exact ×5; 1024³ SGEMM max error 2.15e-6 ×5; no faults | [tests/](tests/), [tests/phase4.log](tests/phase4.log) |
 | Memory-churn / TLB-staleness probes, long soak | ⏳ not run yet | |
-| PyTorch 2.9.1 for gfx1013 | 🔨 building (Ubuntu's `pytorch-rocm` source package, arch set to gfx1013) | [scripts/phase5b.sh](scripts/phase5b.sh) |
+| PyTorch 2.9.1 for gfx1013 | ✅ built (3 h 27 min on the console) and installed; `torch.cuda.get_arch_list()` = `['gfx1013']`, device visible, 12 GiB. ⏳ no GPU ops run yet | [scripts/phase5b.sh](scripts/phase5b.sh) |
 | SGLang | ❌ not attempted, see [below](#what-about-sglang) | |
 
 **Read the caveat before relying on it.** The BC-250's characteristic failure is not a crash but
@@ -58,6 +58,22 @@ treat results as unverified for anything that matters.
 | `Unsupported target gfx1013 by compiler` | exporting `ROCM_PATH=/usr` makes clang look for device libraries in the wrong place | don't set `ROCM_PATH`; Ubuntu's clang finds them itself |
 | Tensile: `amdclang either not found` | Tensile hard-codes AMD's compiler names | symlink `amdclang`/`amdclang++` to `/usr/lib/llvm-21/bin/clang(++)` |
 | Ubuntu's `python3-torch-rocm` reports an empty arch list on gfx1013 | built for gfx908/90a/942/1030/1151/1200/1201 only | rebuild the source package with `PYTORCH_ROCM_ARCH = gfx1013` |
+| PyTorch build OOM-killed at step ~590/2555 (`RegisterCompositeExplicitAutograd_0.cpp`) | the package builds with LTO and debug info; `debian/rules` sets `DEB_BUILD_MAINT_OPTIONS` and `REL_WITH_DEB_INFO` itself, so environment overrides are ignored | edit both in `debian/rules` (`optimize=-lto`, `REL_WITH_DEB_INFO = OFF`); peak then fits in 9 GB with 3 jobs |
+| `torch.cuda` init fails: `dlopen: libcaffe2_nvrtc.so: cannot open shared object file` | the unversioned `libcaffe2_nvrtc.so` link ships only in `libtorch-rocm-dev` (also true of Ubuntu's own build) | install `libtorch-rocm-dev` too |
+
+## Installing the PyTorch build
+
+```sh
+cd /path/to/debs   # the four *+gfx1013 .deb files phase5b.sh produces
+sudo apt-get install ./libtorch-rocm-2.9_*+gfx1013_amd64.deb ./libtorch-rocm-dev_*+gfx1013_amd64.deb \
+  ./libtorch-rocm-test_*+gfx1013_amd64.deb ./python3-torch-rocm_*+gfx1013_amd64.deb
+sudo apt-mark hold libtorch-rocm-2.9 libtorch-rocm-dev libtorch-rocm-test python3-torch-rocm
+LD_LIBRARY_PATH=/opt/rocblas-gfx1013/lib:/path/to/comgr-fixed \
+  python3 -c "import torch; print(torch.cuda.get_arch_list(), torch.cuda.get_device_properties(0))"
+```
+
+The version suffix `+gfx1013` sorts above Ubuntu's, and the hold stops an update from swapping it back. HIP reports
+18 multiprocessors: on RDNA it counts dual-CU work-group processors, so that is the expected 36 CUs.
 
 ## Running the tests
 

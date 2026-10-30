@@ -1,0 +1,46 @@
+== Thu Oct 29 23:57:57 PDT 2026 phase 2 start
+rocminfo is already the newest version (7.1.1-0ubuntu1).
+rocm-smi is already the newest version (7.1.1-0ubuntu1).
+hipcc is already the newest version (7.1.1+dfsg-0ubuntu1).
+librocblas-dev is already the newest version (7.1.0-1ubuntu4).
+libamdhip64-dev is already the newest version (7.1.0-0ubuntu2).
+Solving dependencies...
+0 upgraded, 0 newly installed, 0 to remove and 1 not upgraded.
+== installed versions
+hipcc 7.1.1+dfsg-0ubuntu1
+libamd-comgr-dev 7.1.1+dfsg-0ubuntu1
+libamd-comgr3:amd64 7.1.1+dfsg-0ubuntu1
+libamdhip64-7:amd64 7.1.0-0ubuntu2
+libamdhip64-dev 7.1.0-0ubuntu2
+libflashrom1:amd64 1.6.0-2ubuntu1.1
+libhipblas-common-dev:amd64 7.1.1-0ubuntu1
+libhipblas-dev 7.1.0-0ubuntu5
+libhipblas3 7.1.0-0ubuntu5
+libhiprtc-builtins7:amd64 7.1.0-0ubuntu2
+libhiprtc7:amd64 7.1.0-0ubuntu2
+libhsa-runtime-dev:amd64 7.1.0+dfsg-0ubuntu9
+libhsa-runtime64-1:amd64 7.1.0+dfsg-0ubuntu9
+libhsakmt1:amd64 7.1.0+dfsg-0ubuntu9
+librocblas-dev 7.1.0-1ubuntu4
+librocblas5 7.1.0-1ubuntu4
+librocm-smi64-7 7.1.1-0ubuntu1
+rocm-device-libs-21 7.1.1+dfsg-0ubuntu1
+rocm-smi 7.1.1-0ubuntu1
+rocminfo 7.1.1-0ubuntu1
+== rocminfo
+[37mROCk module is loaded[0m
+== rocblas kernel libraries for gfx101x
+     84 gfx1030
+     92 gfx1100
+     92 gfx1101
+     92 gfx1151
+     52 gfx1200
+     52 gfx1201
+    156 gfx908
+    399 gfx90a
+    238 gfx942
+== comgr
+lrwxrwxrwx 1 root root       17 Apr 14  2026 /usr/lib/x86_64-linux-gnu/libamd_comgr.so -> libamd_comgr.so.3
+lrwxrwxrwx 1 root root       21 Apr 14  2026 /usr/lib/x86_64-linux-gnu/libamd_comgr.so.3 -> libamd_comgr.so.3.0.0
+-rw-r--r-- 1 root root 60235592 Apr 14  2026 /usr/lib/x86_64-linux-gnu/libamd_comgr.so.3.0.0
+== Thu Oct 29 23:57:58 PDT 2026 phase 2 done

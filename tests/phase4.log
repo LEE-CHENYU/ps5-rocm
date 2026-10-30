@@ -1,0 +1,18 @@
+== 01:04:31 vecadd start
+device AMD Custom Zen 2 (Oberon) gcnArch gfx1013:xnack- CUs 18
+run 0: mismatches 0 / 1048576
+run 1: mismatches 0 / 1048576
+run 2: mismatches 0 / 1048576
+run 3: mismatches 0 / 1048576
+run 4: mismatches 0 / 1048576
+VECADD_PASS
+rc=0
+== 01:04:38 sgemm start
+Signal 0x76503c5fd600 time stamps may be invalid.
+run 0: status 0 max abs err 2.15e-06 ok
+run 1: status 0 max abs err 2.15e-06 ok
+run 2: status 0 max abs err 2.15e-06 ok
+run 3: status 0 max abs err 2.15e-06 ok
+run 4: status 0 max abs err 2.15e-06 ok
+SGEMM_PASS
+rc=0

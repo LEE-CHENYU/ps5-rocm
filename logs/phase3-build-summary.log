@@ -1,0 +1,38 @@
+== Fri Oct 30 00:15:46 PDT 2026 phase 3 start
+ninja-build is already the newest version (1.13.2-1).
+rocm-cmake is already the newest version (7.1.1-0ubuntu1).
+python3-msgpack is already the newest version (1.1.2-2build1).
+python3-joblib is already the newest version (1.5.2-1).
+libmsgpack-cxx-dev is already the newest version (7.0.0-2).
+already shared/tensile/Tensile/Common.py
+already shared/tensile/Tensile/Common.py
+already shared/tensile/Tensile/Source/cmake/TensileSupportedArchitectures.cmake
+already shared/tensile/Tensile/Source/lib/include/Tensile/AMDGPU.hpp
+already shared/tensile/Tensile/Source/lib/include/Tensile/AMDGPU.hpp
+already shared/tensile/Tensile/Source/lib/include/Tensile/AMDGPU.hpp
+already shared/tensile/Tensile/Source/lib/include/Tensile/PlaceholderLibrary.hpp
+already shared/tensile/Tensile/Source/lib/include/Tensile/PlaceholderLibrary.hpp
+already shared/tensile/Tensile/Source/lib/include/Tensile/Serialization/Predicates.hpp
+already projects/rocblas/library/src/include/handle.hpp
+already projects/rocblas/library/src/handle.cpp
+already projects/rocblas/library/src/tensile_host.cpp
+Requirement already satisfied: pyyaml in /usr/lib/python3/dist-packages (from Tensile==4.44.0) (6.0.3)
+Requirement already satisfied: msgpack in /usr/lib/python3/dist-packages (from Tensile==4.44.0) (1.1.2)
+Requirement already satisfied: joblib in /usr/lib/python3/dist-packages (from Tensile==4.44.0) (1.5.2)
+Requirement already satisfied: rich in /usr/lib/python3/dist-packages (from Tensile==4.44.0) (13.9.4)
+Requirement already satisfied: markdown-it-py>=2.2.0 in /usr/lib/python3/dist-packages (from rich->Tensile==4.44.0) (3.0.0)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /usr/lib/python3/dist-packages (from rich->Tensile==4.44.0) (2.19.2)
+Requirement already satisfied: mdurl~=0.1 in /usr/lib/python3/dist-packages (from markdown-it-py>=2.2.0->rich->Tensile==4.44.0) (0.1.2)
+-- Configuring done (12.2s)
+[40/481] Linking CXX static library Tensile/lib/librocblas-tensile.a
+[479/481] Linking CXX shared library library/src/librocblas.so.5.1
+[480/481] Creating library symlink library/src/librocblas.so.5 library/src/librocblas.so
+-- Installing: /opt/rocblas-gfx1013/lib/librocblas.so.5.1
+-- Installing: /opt/rocblas-gfx1013/lib/librocblas.so.5
+-- Set non-toolchain portion of runtime path of "/opt/rocblas-gfx1013/lib/librocblas.so.5.1" to "$ORIGIN/../lib:$ORIGIN/../lib/rocblas/lib"
+-- Installing: /opt/rocblas-gfx1013/lib/librocblas.so
+== gfx1013 kernel files: 56
+lrwxrwxrwx 1 root root       15 Oct 30 00:32 /opt/rocblas-gfx1013/lib/librocblas.so -> librocblas.so.5
+lrwxrwxrwx 1 root root       17 Oct 30 00:32 /opt/rocblas-gfx1013/lib/librocblas.so.5 -> librocblas.so.5.1
+-rw-r--r-- 1 root root 30938768 Oct 30 00:32 /opt/rocblas-gfx1013/lib/librocblas.so.5.1
+== Fri Oct 30 00:32:36 PDT 2026 phase 3 done

@@ -20,9 +20,11 @@ cmake -S rocm-libraries/projects/rocblas -B build -G Ninja \
   -DCMAKE_INSTALL_PREFIX=$PFX -DHIP_PLATFORM=amd -DGPU_TARGETS=gfx1013 -DAMDGPU_TARGETS=gfx1013 \
   -DBUILD_WITH_TENSILE=ON -DBUILD_WITH_HIPBLASLT=OFF \
   -DBUILD_CLIENTS_TESTS=OFF -DBUILD_CLIENTS_BENCHMARKS=OFF -DBUILD_FORTRAN_CLIENTS=OFF \
-  -DTensile_LIBRARY_FORMAT=msgpack -DTensile_CPU_THREADS=4 -DROCM_SYMLINK_LIBS=OFF
+  -DTensile_LIBRARY_FORMAT=msgpack -DTensile_CPU_THREADS=4 -DROCM_SYMLINK_LIBS=OFF \
+  -DBUILD_OFFLOAD_COMPRESS=OFF  # Ubuntu's HIP 7.1.0 cannot unbundle compressed code: dot/gemv etc. segfault
 cmake --build build -j 4
 cmake --install build
+python3 -c "import sys;b=open(sys.argv[1],'rb').read();print('== compressed bundles (must be 0):',b.count(b'CCOB'))" $PFX/lib/librocblas.so.5.1
 echo "== gfx1013 kernel files: $(ls $PFX/lib*/rocblas/library 2>/dev/null | grep -c gfx1013)"
 ls -l $PFX/lib*/librocblas.so* 
 echo "== $(date) phase 3 done"

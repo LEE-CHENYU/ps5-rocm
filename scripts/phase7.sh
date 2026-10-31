@@ -16,16 +16,21 @@ COMMON=(-G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=$B/clang -DCMAKE_
         -DBUILD_CLIENTS_TESTS=OFF -DBUILD_CLIENTS_BENCHMARKS=OFF -DBUILD_CLIENTS_SAMPLES=OFF)
 
 echo "== $(date) rocSPARSE"
+[ -f /opt/rocsparse-gfx1013/lib/librocsparse.so.1 ] && echo "already installed, skipping" || {
 cmake -S rocm-libraries/projects/rocsparse -B build-rocsparse "${COMMON[@]}" \
   -DCMAKE_INSTALL_PREFIX=/opt/rocsparse-gfx1013 -DCMAKE_PREFIX_PATH=/opt/rocblas-gfx1013 \
   -DBUILD_WITH_OFFLOAD_COMPRESS=OFF -DBUILD_WITH_ROCTX=OFF
 cmake --build build-rocsparse -j 4
 cmake --install build-rocsparse
+}
 
 echo "== $(date) rocSOLVER"
+# BUILD_WITH_SPARSE=OFF: in 7.1.0, ON defines HAVE_ROCSPARSE, which skips #include <dlfcn.h> in
+# refact/rocsolver_rfinfo.cpp while the file still calls dlsym ("use of undeclared identifier 'dlsym'"). With OFF,
+# rocSOLVER loads rocSPARSE at run time, which finds /opt/rocsparse-gfx1013 through LD_LIBRARY_PATH.
 cmake -S rocm-libraries/projects/rocsolver -B build-rocsolver "${COMMON[@]}" \
   -DCMAKE_INSTALL_PREFIX=/opt/rocsolver-gfx1013 -DCMAKE_PREFIX_PATH="/opt/rocblas-gfx1013;/opt/rocsparse-gfx1013" \
-  -DBUILD_OFFLOAD_COMPRESS=OFF -DBUILD_WITH_SPARSE=ON
+  -DBUILD_OFFLOAD_COMPRESS=OFF -DBUILD_WITH_SPARSE=OFF
 cmake --build build-rocsolver -j 4
 cmake --install build-rocsolver
 

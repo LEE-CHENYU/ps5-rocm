@@ -1,0 +1,8 @@
+ok   torchvision: ResNet-18                          1.0s  resnet18 fwd matches CPU (max abs err 3.3e-06), fwd+bwd ok
+ok   torchvision: transforms v2                      0.0s  resize/crop/normalize on GPU tensors match CPU (max abs err 0.018)
+ok   transformers: logits vs CPU                     1.2s  distilgpt2 logits match CPU (max abs err 0.00031)
+ok   transformers: greedy generate                   1.5s  greedy 20 tokens identical to CPU: ' can handle 4K video at a higher resolution than the Xbox O
+ok   transformers: fine-tune steps                   0.6s  5 AdamW steps, loss 5.668 -> 2.250
+ok   diffusers: tiny Stable Diffusion pipeline       6.7s  tiny SD 10 steps, image (1, 3, 64, 64) matches CPU (max abs err 1.2e-06)
+ok   accelerate: Accelerator fp16 training           1.7s  device cuda, fp16, loss 10.66 -> 0.182
+SUMMARY ok 4/4; not working: none

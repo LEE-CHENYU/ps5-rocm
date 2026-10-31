@@ -1,0 +1,23 @@
+ok   matmul fp32 throughput                   0.52s  5.29 TFLOPS
+ok   matmul fp16 vs CPU fp32                  0.25s  max abs err 0.048
+ok   matmul fp16 throughput                   0.52s  5.09 TFLOPS
+ok   matmul bf16 vs CPU fp32                  0.24s  max abs err 0.36
+ok   matmul bf16 throughput                   0.55s  4.38 TFLOPS
+ok   conv2d fp16 vs CPU fp32                  0.25s  max abs err 0.028
+ok   autocast fp16 + GradScaler training      1.10s  30 AdamW+GradScaler fp16 steps, loss 2.324->2.329
+ok   SDPA fp32 causal vs CPU                  0.35s  max abs err 9.5e-07
+ok   SDPA fp16 causal vs CPU                  0.36s  max abs err 0.0024
+ok   SDPA backends available (fp16)           0.35s  FLASH_ATTENTION:no EFFICIENT_ATTENTION:no MATH:yes
+ok   transformer encoder train (fp32)         1.73s  4-layer d256 encoder, batch 16x128: 24 ms/step
+FAIL LSTM fwd+bwd (MIOpen RNN)                3.57s  miopenStatusUnknownError
+ok   LSTM fwd+bwd (native, MIOpen off)        0.33s  fwd+bwd with torch.backends.cudnn.enabled=False
+CRASH linalg.inv (rocSOLVER/MAGMA)          exit -11 (segfault)
+CRASH linalg.svd                            exit -11 (segfault)
+FAIL linalg.cholesky                          0.21s  Calling torch.linalg.cholesky on a CUDA tensor requires compiling PyTorch with MAGMA. Please use PyTorch built with MAGMA support.
+ok   fft.rfft2 (rocFFT)                       5.14s  max abs err 0.00015
+CRASH sparse COO matmul (hipSPARSE)         exit -11 (segfault)
+ok   randn / dropout / multinomial            0.58s  torch.Size([10])
+FAIL int8 matmul (torch._int_mm)              0.21s  CUDA error: HIPBLAS_STATUS_INVALID_VALUE when calling `hipblasLtMatmulAlgoGetHeuristic( ltHandle, computeDesc.descriptor(), Adesc.descriptor(), Bdesc.
+FAIL torch.compile (Inductor, needs Triton)   0.00s  torch.compile is not supported on Python 3.14+
+ok   allocate 11 GiB in 1 GiB tensors        78.19s  11 x 1 GiB tensors allocated
+SUMMARY ok 15/22; not working: LSTM fwd+bwd (MIOpen RNN), linalg.inv (rocSOLVER/MAGMA), linalg.svd, linalg.cholesky, sparse COO matmul (hipSPARSE), int8 matmul (torch._int_mm), torch.compile (Inductor, needs Triton)

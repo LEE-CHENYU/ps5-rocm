@@ -21,12 +21,13 @@ to PS5 Linux on **Ubuntu 26.04** and documents what it took.
 | Patched `amdgpu` module (PS5 patch + BC-250 TLB-flush fixes) | ✅ boots, display and network fine | [docs/building-amdgpu.md](docs/building-amdgpu.md) |
 | Boot parameters (`gpu_recovery=0`, flush params, 12 GiB GTT) | ✅ active, `mem_info_gtt_total` = 12288 MiB | [scripts/phase1-install-driver.sh](scripts/phase1-install-driver.sh) |
 | ROCm 7.1 runtime (Ubuntu archive) | ✅ `rocminfo` lists **gfx1013**, 36 CU, 12 GiB pool | [logs/phase2-rocminfo.log](logs/phase2-rocminfo.log) |
-| rocBLAS 7.1.0 built for gfx1013 | ✅ 56 gfx1013 kernel files, ~14 min on the console | [scripts/phase3.sh](scripts/phase3.sh), [logs/phase3-build-summary.log](logs/phase3-build-summary.log) |
+| rocBLAS 7.1.0 built for gfx1013 | ✅ 56 gfx1013 kernel files, ~19 min on the console; **build with `BUILD_OFFLOAD_COMPRESS=OFF`** (with it on, GEMM works but dot/gemv segfault) | [scripts/phase3.sh](scripts/phase3.sh), [logs/phase3-build-summary.log](logs/phase3-build-summary.log) |
 | First GPU launches | ✅ vector add exact ×5; 1024³ SGEMM max error 2.15e-6 ×5; no faults | [tests/](tests/), [tests/phase4.log](tests/phase4.log) |
 | Memory-churn / TLB-staleness probes, long soak | ✅ bc250-rocm `seq_probe` ×4 bad_gens=0; PyTorch churn 3 min (249 cycles) + **20-min soak (1,805 cycles)**, every result checked on the CPU, 0 bad, 0 kernel fault lines | [scripts/phase6.sh](scripts/phase6.sh), [tests/phase6.log](tests/phase6.log) |
 | PyTorch 2.9.1 for gfx1013 | ✅ built uncompressed, installed; **30/30 op checks** (element-wise, reductions, sort/index, rocBLAS matmul, MIOpen conv, pooling, batch norm) match the CPU; 50-step CNN training matches the CPU to 2.1e-7 relative loss difference | [scripts/phase5b.sh](scripts/phase5b.sh), [tests/torch_ops_check.py](tests/torch_ops_check.py) |
 | torchvision 0.24.1, transformers 5.22, diffusers 0.42, accelerate 1.15 | ✅ ResNet-18 train/infer, distilgpt2 logits + greedy generation identical to CPU + fine-tuning, tiny Stable Diffusion pipeline, Accelerator fp16 training | [tests/hf_stack_check.py](tests/hf_stack_check.py), [tests/hf-stack-check.log](tests/hf-stack-check.log) |
-| What else works, what does not | 15/22 capability checks; see [below](#what-runs-and-what-does-not) | [tests/torch_capability_probe.py](tests/torch_capability_probe.py), [tests/capability-probe.log](tests/capability-probe.log) |
+| rocSPARSE 7.1.0 + rocSOLVER 7.1.0 for gfx1013 | ✅ sparse matmul; `linalg` inv / solve / det / QR / SVD / eigvalsh match the CPU (5e-7 to 3e-5); Cholesky and lstsq still need MAGMA | [scripts/phase7.sh](scripts/phase7.sh) |
+| What else works, what does not | 18/22 capability checks; see [below](#what-runs-and-what-does-not) | [tests/torch_capability_probe.py](tests/torch_capability_probe.py), [tests/capability-probe.log](tests/capability-probe.log) |
 | SGLang | ❌ not attempted, see [below](#what-about-sglang) | |
 
 **What the soak does and does not show.** The BC-250's characteristic failure is not a crash but *silently stale
@@ -65,6 +66,9 @@ mixed load, so run your own soak before trusting long jobs.
 | PyTorch build OOM-killed at step ~590/2555 (`RegisterCompositeExplicitAutograd_0.cpp`) | the package builds with LTO and debug info; `debian/rules` sets `DEB_BUILD_MAINT_OPTIONS` and `REL_WITH_DEB_INFO` itself, so environment overrides are ignored | edit both in `debian/rules` (`optimize=-lto`, `REL_WITH_DEB_INFO = OFF`); peak then fits in 9 GB with 3 jobs |
 | `torch.cuda` init fails: `dlopen: libcaffe2_nvrtc.so: cannot open shared object file` | the unversioned `libcaffe2_nvrtc.so` link ships only in `libtorch-rocm-dev` (also true of Ubuntu's own build) | install `libtorch-rocm-dev` too |
 | First kernel segfaults in `libamdhip64` after "Failed to unbundle code object" | Ubuntu's HIP runtime 7.1.0 cannot read `--offload-compress` bundles (a two-line HIP program built with the flag reproduces it); PyTorch always compresses | build without it (`cmake/Dependencies.cmake`, see phase5b.sh) |
+| `torch.dot` / `mv` and rocSOLVER QR/SVD/eigen segfault, matmul fine | rocBLAS's own kernels were built with offload compression (its default), Tensile GEMM kernels are separate files | rebuild rocBLAS with `-DBUILD_OFFLOAD_COMPRESS=OFF`; same for rocSPARSE (`BUILD_WITH_OFFLOAD_COMPRESS`) and rocSOLVER |
+| `linalg` inverse/SVD and sparse matmul segfault | Ubuntu's rocSOLVER and rocSPARSE have no gfx1013 code | build both for gfx1013 (phase7.sh) |
+| rocSOLVER build: `use of undeclared identifier 'dlsym'` | 7.1.0 with `BUILD_WITH_SPARSE=ON` skips `<dlfcn.h>` but still calls `dlsym` | `-DBUILD_WITH_SPARSE=OFF` (rocSPARSE is loaded at run time) |
 | Next segfault: "Couldn't create blit kernels", comgr "no targets are registered" | Ubuntu's `libtorch_cpu` (`USE_LLVM`) carries a private LLVM and exports `LLVMInitialize*`; loaded first, it captures comgr's AMDGPU target registration | `LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libLLVM.so.21.1` |
 | Convolution: MIOpen "Failed to load kernel source: Conv_Winograd_v30_*.s" | Ubuntu's MIOpen (dfsg) ships without its GCN assembly kernels | `MIOPEN_DEBUG_GCN_ASM_KERNELS=0` |
 | Copies above 16 KB never complete | stock SDMA microcode for this chip family (bc250-rocm) | `HSA_ENABLE_SDMA=0` |
@@ -90,13 +94,13 @@ The version suffix `+gfx1013` sorts above Ubuntu's, and the hold stops an update
 | fp32 / fp16 / bf16 matmul (rocBLAS) | 5.3 / 5.1 / 4.4 TFLOPS at 4096³ |
 | convolution, pooling, BatchNorm (with MIOpen off, see below), mixed precision (`autocast` + `GradScaler`) | ResNet-18 training 84 img/s, inference ~200 img/s at batch 32 |
 | attention (`scaled_dot_product_attention`, math backend), transformer training, LSTM | 4-layer d256 encoder 24 ms/step |
-| FFT, random sampling, dropout, about 11 GiB of tensors in one process | |
+| FFT, sparse matmul, `torch.linalg` inv / solve / det / QR / SVD / eigvalsh (with phase 7), random sampling, dropout, about 11 GiB of tensors in one process | |
 | Hugging Face transformers / diffusers / accelerate, torchvision models and transforms | see the status table |
 
 | Does not work | Why | Use instead |
 |---|---|---|
 | MIOpen BatchNorm training and RNNs | its kernels do not build for gfx1013 (inline asm, CK reductions) | `torch.backends.cudnn.enabled = False`: PyTorch's own kernels, same speed here |
-| `torch.linalg` inverse / SVD / Cholesky, sparse matmul | Ubuntu's rocSOLVER and rocSPARSE have no gfx1013 code; this PyTorch has no MAGMA | do it on the CPU (or build rocSOLVER/rocSPARSE for gfx1013 like rocBLAS) |
+| `torch.linalg.cholesky`, `lstsq` (and other MAGMA-only ops) | this PyTorch is built without MAGMA, and these do not route to rocSOLVER | do them on the CPU |
 | int8 matmul | hipBLASLt does not support gfx1013 | fp16 |
 | `torch.compile` | TorchDynamo does not support Python 3.14, and Triton has no RDNA1 backend | eager mode |
 | flash / memory-efficient attention | not built for gfx1013 | the math backend works, using more memory |
@@ -112,7 +116,7 @@ echo "torch==2.9.1+debian" > /opt/ml-venv/constraints.txt    # stops pip replaci
 ```
 
 Run with `HSA_ENABLE_SDMA=0 MIOPEN_DEBUG_GCN_ASM_KERNELS=0 LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libLLVM.so.21.1
-LD_LIBRARY_PATH=/opt/rocblas-gfx1013/lib:/path/to/comgr-fixed` and set `torch.backends.cudnn.enabled = False` in the
+LD_LIBRARY_PATH=/opt/rocblas-gfx1013/lib:/opt/rocsolver-gfx1013/lib:/opt/rocsparse-gfx1013/lib:/path/to/comgr-fixed` and set `torch.backends.cudnn.enabled = False` in the
 script. Keep the Hugging Face cache on a filesystem with symlinks (not exFAT). The default PyPI torchvision wheel is
 built for CUDA (`libcudart.so.12: cannot open shared object file`); use the CPU wheel above.
 

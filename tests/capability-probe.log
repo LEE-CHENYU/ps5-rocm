@@ -1,23 +1,33 @@
-ok   matmul fp32 throughput                   0.52s  5.29 TFLOPS
-ok   matmul fp16 vs CPU fp32                  0.25s  max abs err 0.048
-ok   matmul fp16 throughput                   0.52s  5.09 TFLOPS
+ok   matmul fp32 throughput                   0.57s  5.24 TFLOPS
+ok   matmul fp16 vs CPU fp32                  0.26s  max abs err 0.048
+ok   matmul fp16 throughput                   0.52s  5.06 TFLOPS
 ok   matmul bf16 vs CPU fp32                  0.24s  max abs err 0.36
-ok   matmul bf16 throughput                   0.55s  4.38 TFLOPS
+ok   matmul bf16 throughput                   0.56s  4.37 TFLOPS
 ok   conv2d fp16 vs CPU fp32                  0.25s  max abs err 0.028
-ok   autocast fp16 + GradScaler training      1.10s  30 AdamW+GradScaler fp16 steps, loss 2.324->2.329
-ok   SDPA fp32 causal vs CPU                  0.35s  max abs err 9.5e-07
-ok   SDPA fp16 causal vs CPU                  0.36s  max abs err 0.0024
-ok   SDPA backends available (fp16)           0.35s  FLASH_ATTENTION:no EFFICIENT_ATTENTION:no MATH:yes
-ok   transformer encoder train (fp32)         1.73s  4-layer d256 encoder, batch 16x128: 24 ms/step
-FAIL LSTM fwd+bwd (MIOpen RNN)                3.57s  miopenStatusUnknownError
+ok   autocast fp16 + GradScaler training      1.59s  30 AdamW+GradScaler fp16 steps, loss 2.324->2.329
+ok   SDPA fp32 causal vs CPU                  0.34s  max abs err 9.5e-07
+ok   SDPA fp16 causal vs CPU                  0.35s  max abs err 0.0024
+ok   SDPA backends available (fp16)           0.33s  FLASH_ATTENTION:no EFFICIENT_ATTENTION:no MATH:yes
+ok   transformer encoder train (fp32)         1.59s  4-layer d256 encoder, batch 16x128: 24 ms/step
+FAIL LSTM fwd+bwd (MIOpen RNN)                3.02s  miopenStatusUnknownError
 ok   LSTM fwd+bwd (native, MIOpen off)        0.33s  fwd+bwd with torch.backends.cudnn.enabled=False
-CRASH linalg.inv (rocSOLVER/MAGMA)          exit -11 (segfault)
-CRASH linalg.svd                            exit -11 (segfault)
-FAIL linalg.cholesky                          0.21s  Calling torch.linalg.cholesky on a CUDA tensor requires compiling PyTorch with MAGMA. Please use PyTorch built with MAGMA support.
-ok   fft.rfft2 (rocFFT)                       5.14s  max abs err 0.00015
-CRASH sparse COO matmul (hipSPARSE)         exit -11 (segfault)
-ok   randn / dropout / multinomial            0.58s  torch.Size([10])
-FAIL int8 matmul (torch._int_mm)              0.21s  CUDA error: HIPBLAS_STATUS_INVALID_VALUE when calling `hipblasLtMatmulAlgoGetHeuristic( ltHandle, computeDesc.descriptor(), Adesc.descriptor(), Bdesc.
+ok   linalg.inv (rocSOLVER/MAGMA)             0.32s  max abs err 3.5e-09
+ok   linalg.svd                               0.35s  max abs err 0.00088
+FAIL linalg.cholesky                          0.19s  Calling torch.linalg.cholesky on a CUDA tensor requires compiling PyTorch with MAGMA. Please use PyTorch built with MAGMA support.
+ok   fft.rfft2 (rocFFT)                       4.46s  max abs err 0.00015
+ok   sparse COO matmul (hipSPARSE)            0.22s  max abs err 4.2e-05
+ok   randn / dropout / multinomial            0.49s  torch.Size([10])
+FAIL int8 matmul (torch._int_mm)              0.20s  CUDA error: HIPBLAS_STATUS_INVALID_VALUE when calling `hipblasLtMatmulAlgoGetHeuristic( ltHandle, computeDesc.descriptor(), Adesc.descriptor(), Bdesc.
 FAIL torch.compile (Inductor, needs Triton)   0.00s  torch.compile is not supported on Python 3.14+
-ok   allocate 11 GiB in 1 GiB tensors        78.19s  11 x 1 GiB tensors allocated
-SUMMARY ok 15/22; not working: LSTM fwd+bwd (MIOpen RNN), linalg.inv (rocSOLVER/MAGMA), linalg.svd, linalg.cholesky, sparse COO matmul (hipSPARSE), int8 matmul (torch._int_mm), torch.compile (Inductor, needs Triton)
+ok   allocate 11 GiB in 1 GiB tensors         9.32s  11 x 1 GiB tensors allocated
+SUMMARY ok 18/22; not working: LSTM fwd+bwd (MIOpen RNN), linalg.cholesky, int8 matmul (torch._int_mm), torch.compile (Inductor, needs Triton)
+ok   torchvision: ResNet-18                          1.4s  resnet18 fwd matches CPU (max abs err 3.3e-06), fwd+bwd ok
+ok   torchvision: transforms v2                      0.1s  resize/crop/normalize on GPU tensors match CPU (max abs err 0.018)
+ok   transformers: logits vs CPU                     1.6s  distilgpt2 logits match CPU (max abs err 0.00031)
+ok   transformers: greedy generate                   0.6s  greedy 20 tokens identical to CPU: ' can handle 4K video at a higher resolution than the Xbox O
+ok   transformers: fine-tune steps                   1.7s  5 AdamW steps, loss 5.160 -> 2.292
+ok   diffusers: tiny Stable Diffusion pipeline       4.7s  tiny SD 10 steps, image (1, 3, 64, 64) matches CPU (max abs err 1.2e-06)
+ok   accelerate: Accelerator fp16 training           1.5s  device cuda, fp16, loss 10.66 -> 0.182
+SUMMARY ok 4/4; not working: none
+ok   train param fc2.weight       max abs err 8.94e-08
+ok   train param fc2.bias         max abs err 1.94e-07

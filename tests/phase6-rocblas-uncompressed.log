@@ -1,0 +1,108 @@
+== Sat Oct 31 15:42:20 PDT 2026 boot 9b7780d0-3536-49b7-8ae7-5226d54955ff recovery=0 runlist=3 kiq=0 fault_lines_at_start=0
+== 15:42:23 5c-torch-ops
+torch 2.9.1+debian hip 7.1.52801-9999 arch ['gfx1013'] device gfx1013:xnack-
+ok   add                          max abs err 0
+ok   mul                          max abs err 0
+ok   exp                          max abs err 7.63e-06
+ok   log                          max abs err 4.77e-07
+ok   tanh                         max abs err 5.96e-08
+ok   sigmoid                      max abs err 1.19e-07
+ok   relu                         max abs err 0
+ok   gelu                         max abs err 4.77e-07
+ok   sum                          max abs err 0.000244
+ok   mean+std[0]                  max abs err 2.33e-10
+ok   mean+std[1]                  max abs err 0
+ok   max/argmax[0]                max abs err 0
+ok   max/argmax[1]                max abs err 0
+ok   cumsum                       max abs err 1.91e-05
+ok   softmax                      max abs err 1.49e-08
+ok   log_softmax                  max abs err 9.54e-07
+ok   layer_norm                   max abs err 9.54e-07
+ok   index_select                 max abs err 0
+ok   gather                       max abs err 0
+ok   scatter_add                  max abs err 0
+ok   sort                         max abs err 0
+ok   topk                         max abs err 0
+ok   embedding                    max abs err 0
+ok   matmul 64                    max abs err 4.77e-06
+ok   matmul 257                   max abs err 4.96e-05
+ok   matmul 1024                  max abs err 0.00032
+ok   bmm 16x128x64x96             max abs err 7.63e-06
+ok   linear                       max abs err 0.000183
+ok   conv2d 3x3                   max abs err 9.54e-06
+ok   max_pool2d                   max abs err 0
+ok   batch_norm                   max abs err 2.38e-07
+ok   cross_entropy                max abs err 2.38e-07
+train: loss cpu 2.3013->2.2977 gpu 2.3013->2.2977 max rel loss diff 2.08e-07 (4.0 s)
+ok   train param conv1.weight     max abs err 4.47e-08
+ok   train param conv1.bias       max abs err 3.73e-08
+ok   train param conv2.weight     max abs err 2.61e-08
+ok   train param conv2.bias       max abs err 2.24e-08
+ok   train param fc1.weight       max abs err 2.79e-08
+ok   train param fc1.bias         max abs err 5.4e-08
+ok   train param fc2.weight       max abs err 8.94e-08
+ok   train param fc2.bias         max abs err 1.94e-07
+TORCH_OPS_PASS
+== 15:42:36 5c-torch-ops rc=0 kernel_fault_lines=+0
+== 15:42:36 6a-seq_probe-1
+gen1 n=8388608 tail=0 va=0x726132400000 wrong=0 zeros=0 first=-1 ok
+gen2 n=4194304 tail=0 va=0x726133400000 wrong=0 zeros=0 first=-1 ok
+gen3 n=8388608 tail=0 va=0x726132400000 wrong=0 zeros=0 first=-1 ok
+gen4 n=6000000 tail=128 va=0x726132c00000 wrong=0 zeros=0 first=-1 ok
+gen5 n=8388608 tail=0 va=0x726132400000 wrong=0 zeros=0 first=-1 ok
+RESULT bad_gens=0
+== 15:42:36 6a-seq_probe-1 rc=0 kernel_fault_lines=+0
+== 15:42:36 6a-seq_probe-2
+gen1 n=8388608 tail=0 va=0x7d4b16400000 wrong=0 zeros=0 first=-1 ok
+gen2 n=4194304 tail=0 va=0x7d4b17400000 wrong=0 zeros=0 first=-1 ok
+gen3 n=8388608 tail=0 va=0x7d4b16400000 wrong=0 zeros=0 first=-1 ok
+gen4 n=6000000 tail=128 va=0x7d4b16c00000 wrong=0 zeros=0 first=-1 ok
+gen5 n=8388608 tail=0 va=0x7d4b16400000 wrong=0 zeros=0 first=-1 ok
+RESULT bad_gens=0
+== 15:42:37 6a-seq_probe-2 rc=0 kernel_fault_lines=+0
+== 15:42:37 6a-seq_probe-3
+gen1 n=8388608 tail=0 va=0x7bb5ea400000 wrong=0 zeros=0 first=-1 ok
+gen2 n=4194304 tail=0 va=0x7bb5eb400000 wrong=0 zeros=0 first=-1 ok
+gen3 n=8388608 tail=0 va=0x7bb5ea400000 wrong=0 zeros=0 first=-1 ok
+gen4 n=6000000 tail=128 va=0x7bb5eac00000 wrong=0 zeros=0 first=-1 ok
+gen5 n=8388608 tail=0 va=0x7bb5ea400000 wrong=0 zeros=0 first=-1 ok
+RESULT bad_gens=0
+== 15:42:38 6a-seq_probe-3 rc=0 kernel_fault_lines=+0
+== 15:42:38 6b-churn-3min
+[  0.0 min] cycles 1 bad 0 peak alloc 1.76 GiB
+[  1.0 min] cycles 86 bad 0 peak alloc 3.29 GiB
+[  2.1 min] cycles 174 bad 0 peak alloc 3.29 GiB
+CHURN_SOAK_PASS cycles=248 minutes=3 bad=0
+== 15:45:43 6b-churn-3min rc=0 kernel_fault_lines=+0
+== 15:45:43 6c-soak-20min
+[  0.0 min] cycles 1 bad 0 peak alloc 1.76 GiB
+[  1.0 min] cycles 86 bad 0 peak alloc 3.29 GiB
+[  2.0 min] cycles 172 bad 0 peak alloc 3.29 GiB
+[  3.0 min] cycles 247 bad 0 peak alloc 3.29 GiB
+[  4.0 min] cycles 323 bad 0 peak alloc 3.29 GiB
+[  5.1 min] cycles 411 bad 0 peak alloc 3.29 GiB
+[  6.1 min] cycles 497 bad 0 peak alloc 3.29 GiB
+[  7.1 min] cycles 576 bad 0 peak alloc 3.29 GiB
+[  8.1 min] cycles 657 bad 0 peak alloc 3.29 GiB
+[  9.1 min] cycles 748 bad 0 peak alloc 3.29 GiB
+[ 10.2 min] cycles 821 bad 0 peak alloc 3.29 GiB
+[ 11.2 min] cycles 901 bad 0 peak alloc 3.29 GiB
+[ 12.2 min] cycles 983 bad 0 peak alloc 3.29 GiB
+[ 13.2 min] cycles 1076 bad 0 peak alloc 3.29 GiB
+[ 14.2 min] cycles 1156 bad 0 peak alloc 3.29 GiB
+[ 15.2 min] cycles 1252 bad 0 peak alloc 3.29 GiB
+[ 16.2 min] cycles 1340 bad 0 peak alloc 3.29 GiB
+[ 17.2 min] cycles 1424 bad 0 peak alloc 3.29 GiB
+[ 18.2 min] cycles 1509 bad 0 peak alloc 3.29 GiB
+[ 19.3 min] cycles 1603 bad 0 peak alloc 3.29 GiB
+CHURN_SOAK_PASS cycles=1683 minutes=20 bad=0
+== 16:05:50 6c-soak-20min rc=0 kernel_fault_lines=+0
+== 16:05:50 6c-seq_probe-after
+gen1 n=8388608 tail=0 va=0x772089000000 wrong=0 zeros=0 first=-1 ok
+gen2 n=4194304 tail=0 va=0x77208a000000 wrong=0 zeros=0 first=-1 ok
+gen3 n=8388608 tail=0 va=0x772089000000 wrong=0 zeros=0 first=-1 ok
+gen4 n=6000000 tail=128 va=0x772089800000 wrong=0 zeros=0 first=-1 ok
+gen5 n=8388608 tail=0 va=0x772089000000 wrong=0 zeros=0 first=-1 ok
+RESULT bad_gens=0
+== 16:05:51 6c-seq_probe-after rc=0 kernel_fault_lines=+0
+PHASE6_PASS 16:05:51

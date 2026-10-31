@@ -98,7 +98,10 @@ class Net(nn.Module):
 
 torch.manual_seed(1)
 data = torch.randn(50, 32, 1, 28, 28)
-labels = torch.randint(0, 10, (50, 32))
+# Labels come from a fixed random "teacher" projection of the input, so the task is learnable and the loss must fall
+# (with random labels it cannot, on either device).
+teacher = torch.randn(28 * 28, 10)
+labels = (data.flatten(2) @ teacher).argmax(-1)
 torch.manual_seed(2)
 cpu_net = Net()
 gpu_net = Net().to(dev)

@@ -14,7 +14,7 @@ failed and the whole machine needed a power cycle.
 This repository adapts the BC-250 community's recipe ([akandr/bc250-rocm](https://github.com/akandr/bc250-rocm))
 to PS5 Linux on **Ubuntu 26.04** and documents what it took.
 
-## Status (2026-10-30)
+## Status (2026-10-31)
 
 | Step | State | Evidence |
 |---|---|---|
@@ -23,14 +23,15 @@ to PS5 Linux on **Ubuntu 26.04** and documents what it took.
 | ROCm 7.1 runtime (Ubuntu archive) | ✅ `rocminfo` lists **gfx1013**, 36 CU, 12 GiB pool | [logs/phase2-rocminfo.log](logs/phase2-rocminfo.log) |
 | rocBLAS 7.1.0 built for gfx1013 | ✅ 56 gfx1013 kernel files, ~14 min on the console | [scripts/phase3.sh](scripts/phase3.sh), [logs/phase3-build-summary.log](logs/phase3-build-summary.log) |
 | First GPU launches | ✅ vector add exact ×5; 1024³ SGEMM max error 2.15e-6 ×5; no faults | [tests/](tests/), [tests/phase4.log](tests/phase4.log) |
-| Memory-churn / TLB-staleness probes, long soak | ⏳ not run yet | |
-| PyTorch 2.9.1 for gfx1013 | ✅ built (3 h 27 min on the console) and installed; `torch.cuda.get_arch_list()` = `['gfx1013']`, device visible, 12 GiB. ⏳ no GPU ops run yet | [scripts/phase5b.sh](scripts/phase5b.sh) |
+| Memory-churn / TLB-staleness probes, long soak | ✅ bc250-rocm `seq_probe` ×4 bad_gens=0; PyTorch churn 3 min (249 cycles) + **20-min soak (1,805 cycles)**, every result checked on the CPU, 0 bad, 0 kernel fault lines | [scripts/phase6.sh](scripts/phase6.sh), [tests/phase6.log](tests/phase6.log) |
+| PyTorch 2.9.1 for gfx1013 | ✅ built uncompressed, installed; **30/30 op checks** (element-wise, reductions, sort/index, rocBLAS matmul, MIOpen conv, pooling, batch norm) match the CPU; 50-step CNN training matches the CPU to 2.1e-7 relative loss difference | [scripts/phase5b.sh](scripts/phase5b.sh), [tests/torch_ops_check.py](tests/torch_ops_check.py) |
 | SGLang | ❌ not attempted, see [below](#what-about-sglang) | |
 
-**Read the caveat before relying on it.** The BC-250's characteristic failure is not a crash but
-*silently stale GPU address translations* after memory is freed and reallocated. The small tests
-here do not churn memory, so they cannot rule that out yet. Until the churn probes and a soak pass,
-treat results as unverified for anything that matters.
+**What the soak does and does not show.** The BC-250's characteristic failure is not a crash but *silently stale
+GPU address translations* after memory is freed and reallocated. A 20-minute churn soak (allocations from 4 to 512 MB
+freed back to the driver each cycle, every result and four long-lived sentinel buffers checked on the CPU) found no
+corruption and no kernel fault. That is evidence, not proof: the BC-250 project saw rare faults only after hours of
+mixed load, so run your own soak before trusting long jobs.
 
 ## What it takes
 
@@ -61,6 +62,10 @@ treat results as unverified for anything that matters.
 | Ubuntu's `python3-torch-rocm` reports an empty arch list on gfx1013 | built for gfx908/90a/942/1030/1151/1200/1201 only | rebuild the source package with `PYTORCH_ROCM_ARCH = gfx1013` |
 | PyTorch build OOM-killed at step ~590/2555 (`RegisterCompositeExplicitAutograd_0.cpp`) | the package builds with LTO and debug info; `debian/rules` sets `DEB_BUILD_MAINT_OPTIONS` and `REL_WITH_DEB_INFO` itself, so environment overrides are ignored | edit both in `debian/rules` (`optimize=-lto`, `REL_WITH_DEB_INFO = OFF`); peak then fits in 9 GB with 3 jobs |
 | `torch.cuda` init fails: `dlopen: libcaffe2_nvrtc.so: cannot open shared object file` | the unversioned `libcaffe2_nvrtc.so` link ships only in `libtorch-rocm-dev` (also true of Ubuntu's own build) | install `libtorch-rocm-dev` too |
+| First kernel segfaults in `libamdhip64` after "Failed to unbundle code object" | Ubuntu's HIP runtime 7.1.0 cannot read `--offload-compress` bundles (a two-line HIP program built with the flag reproduces it); PyTorch always compresses | build without it (`cmake/Dependencies.cmake`, see phase5b.sh) |
+| Next segfault: "Couldn't create blit kernels", comgr "no targets are registered" | Ubuntu's `libtorch_cpu` (`USE_LLVM`) carries a private LLVM and exports `LLVMInitialize*`; loaded first, it captures comgr's AMDGPU target registration | `LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libLLVM.so.21.1` |
+| Convolution: MIOpen "Failed to load kernel source: Conv_Winograd_v30_*.s" | Ubuntu's MIOpen (dfsg) ships without its GCN assembly kernels | `MIOPEN_DEBUG_GCN_ASM_KERNELS=0` |
+| Copies above 16 KB never complete | stock SDMA microcode for this chip family (bc250-rocm) | `HSA_ENABLE_SDMA=0` |
 
 ## Installing the PyTorch build
 
@@ -69,8 +74,8 @@ cd /path/to/debs   # the four *+gfx1013 .deb files phase5b.sh produces
 sudo apt-get install ./libtorch-rocm-2.9_*+gfx1013_amd64.deb ./libtorch-rocm-dev_*+gfx1013_amd64.deb \
   ./libtorch-rocm-test_*+gfx1013_amd64.deb ./python3-torch-rocm_*+gfx1013_amd64.deb
 sudo apt-mark hold libtorch-rocm-2.9 libtorch-rocm-dev libtorch-rocm-test python3-torch-rocm
-LD_LIBRARY_PATH=/opt/rocblas-gfx1013/lib:/path/to/comgr-fixed \
-  python3 -c "import torch; print(torch.cuda.get_arch_list(), torch.cuda.get_device_properties(0))"
+HSA_ENABLE_SDMA=0 MIOPEN_DEBUG_GCN_ASM_KERNELS=0 LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libLLVM.so.21.1 \
+  LD_LIBRARY_PATH=/opt/rocblas-gfx1013/lib:/path/to/comgr-fixed python3 -c "import torch; print(torch.cuda.get_arch_list(), torch.cuda.get_device_properties(0))"
 ```
 
 The version suffix `+gfx1013` sorts above Ubuntu's, and the hold stops an update from swapping it back. HIP reports

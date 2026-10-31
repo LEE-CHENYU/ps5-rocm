@@ -5,13 +5,20 @@
 #   6b  tests/churn_soak.py 3           3 minutes of PyTorch allocation churn, verified on the CPU
 #   6c  tests/churn_soak.py SOAK_MIN    the soak (default 20 minutes), then seq_probe once more
 # After every stage the kernel log is checked for the fault lines the BC-250 project watches for.
-# HSA_ENABLE_SDMA=0: with the stock SDMA microcode no copy above 16 KB completes on this chip family (bc250-rocm),
+# LD_PRELOAD of libLLVM: see the export below. HSA_ENABLE_SDMA=0: with the stock SDMA microcode no copy above 16 KB completes on this chip family (bc250-rocm),
 # so copies go through shader kernels instead. Run with nothing else on the GPU; with gpu_recovery=0 a fault = reboot.
 # Usage: phase6.sh TESTS_DIR BC250_DIR [SOAK_MIN]
 set -uo pipefail
 T=$1 BC=$2 SOAK=${3:-20}
 W=/srv/rocm-build/phase6; mkdir -p $W; cd $W
 export HSA_ENABLE_SDMA=0 LD_LIBRARY_PATH=/opt/rocblas-gfx1013/lib:/srv/rocm-build/comgr-fixed
+# Ubuntu's libtorch_cpu (USE_LLVM) carries a private LLVM and exports its LLVMInitialize* functions; loaded first,
+# they capture comgr's target registration, so the HIP runtime cannot build its blit kernels ("no targets are
+# registered", then a segfault). Preloading the system libLLVM makes those calls reach the copy comgr uses.
+export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libLLVM.so.21.1
+# Ubuntu's MIOpen (dfsg) ships without its hand-written GCN assembly kernels (e.g. Conv_Winograd_v30_*.s), so
+# convolution fails "Failed to load kernel source" unless MIOpen is told to skip them.
+export MIOPEN_DEBUG_GCN_ASM_KERNELS=0
 PAT="page fault \(src_id|memory access fault|preemption time out|Queue preemption failed|runlist rebuild flush failed|GPU reset begin|ring .* timeout"
 faults() { journalctl -k -b 0 --no-pager 2>/dev/null | grep -ciE "$PAT"; }
 F0=$(faults)
